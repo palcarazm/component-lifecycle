@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "commonjs", // CommonJS used cause of jest need
+    "noEmit": true,
+    "rootDir": "src",
+    "types": ["jest", "node"],
+  },
+  "include": ["src/main/**/*.ts", "src/test/**/*.ts"]
+}

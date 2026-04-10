@@ -1,0 +1,92 @@
+{
+  "name": "component-lifecycle",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "A lightweight, framework-agnostic lifecycle engine for DOM components with typed events, state machine, introspection and extensible hooks.",
+  "homepage": "https://github.com/palcarazm/component-lifecycle#readme",
+  "author": {
+    "name": "Pablo Alcaraz Martínez",
+    "url": "https://github.com/palcarazm/"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/palcarazm/component-lifecycle.git"
+  },
+  "funding": {
+    "type": "GitHub Sponsors",
+    "url": "https://github.com/sponsors/palcarazm"
+  },
+  "bugs": {
+    "url": "https://github.com/palcarazm/component-lifecycle/issues"
+  },
+  "keywords": [
+    "lifecycle",
+    "dom",
+    "components",
+    "state-machine",
+    "framework-agnostic",
+    "vanilla-js",
+    "architecture",
+    "frontend"
+  ],
+  "main": "dist/index.cjs",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "typings": "dist/index.d.ts",
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs",
+      "default": "./dist/index.mjs"
+    }
+  },
+  "scripts": {
+    "clean": "rimraf dist",
+    "clean:tmp": "rimraf dist/tmp",
+    "docs:api": "typedoc",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:serve": "vitepress serve docs",
+    "build:ts": "tsc --project tsconfig.json",
+    "build:rollup": "rollup -c",
+    "build": "npm run clean && npm run build:ts && npm run build:rollup && npm run clean:tmp",
+    "lint": "eslint ./src",
+    "prepare": "husky",
+    "test": "jest --coverage"
+  },
+  "engines": {
+    "node": ">=22 <25",
+    "npm": ">=10"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^20.3.1",
+    "@commitlint/config-conventional": "^20.3.1",
+    "@rollup/plugin-terser": "^1.0.0",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^25.6.0",
+    "@typescript-eslint/eslint-plugin": "^8.58.0",
+    "@typescript-eslint/parser": "^8.58.0",
+    "commitlint": "^20.3.1",
+    "eslint": "^10.0.0",
+    "expect-type": "^1.3.0",
+    "globals": "^17.0.0",
+    "husky": "^9.0.11",
+    "jest": "^30.2.0",
+    "jest-environment-jsdom": "^30.2.0",
+    "rimraf": "^6.1.3",
+    "rollup": "^4.60.1",
+    "rollup-plugin-dts": "^6.4.1",
+    "ts-jest": "^29.4.6",
+    "ts-node": "^10.9.2",
+    "typedoc": "^0.28.18",
+    "typedoc-plugin-markdown": "^4.11.0",
+    "typescript": "^6.0.2",
+    "vitepress": "^1.6.4"
+  }
+}
