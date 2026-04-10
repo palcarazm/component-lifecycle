@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "ES2016",
+    "module": "ESNext",
+    "strict": true,
+    "declaration": true,
+    "declarationMap": false,
+    "declarationDir": "dist/tmp/@types",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "rootDir": "src/main",
+    "outDir": "dist/tmp/ts",
+    "types": ["node"],
+    "typeRoots": [
+      "src/main/types",
+      "node_modules/@types"
+    ]
+  },
+  "include": ["src/main/**/*.ts"]
+}
