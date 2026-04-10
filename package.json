@@ -47,6 +47,7 @@
     }
   },
   "scripts": {
+    "postversion": "npm run build",
     "clean": "rimraf dist",
     "clean:tmp": "rimraf dist/tmp",
     "docs:api": "typedoc",
