@@ -2,16 +2,24 @@ import { defineConfig } from 'vitepress'
 
 export default defineConfig({
   title: " ",
-  description: "Component Lifecycle documentation",
+  description: "A lightweight, framework-agnostic lifecycle engine for DOM components with typed events, a strict state machine, and ergonomic event APIs.",
   base: '/component-lifecycle/',
 
   head: [
-    ['link', { rel: 'icon', href: '/favicon.ico' }],
-    ['link', { rel: 'icon', type: 'image/png', href: '/favicon.png' }]
+    ['link', { rel: 'icon', type: 'image/x-icon', href: '/component-lifecycle/favicon.ico' }],
+    ['link', { rel: 'icon', type: 'image/png', href: '/component-lifecycle/favicon.png' }],
+    ['meta', { name: 'author', content: 'https://github.com/palcarazm' }],
+    ['meta', { name: 'robots', content: 'index, follow' }],
+    ['meta', { name: 'revisit-after', content: '1 month' }],
+    ['meta', { property: 'og:description', content: 'A lightweight, framework-agnostic lifecycle engine for DOM components with typed events, a strict state machine, and ergonomic event APIs.' }],
+    ['meta', { property: 'og:url', content: 'https://palcarazm.github.io/component-lifecycle' }],
+    ['meta', { property: 'og:image', content: 'https://palcarazm.github.io/component-lifecycle/card.png' }],
+    ['meta', { property: 'og:image:width', content: '728' }],
+    ['meta', { property: 'og:image:height', content: '364' }],
   ],
 
   themeConfig: {
-    logo: "/logo.svg",
+    logo: "/logo.png",
     search: {
       provider: 'local'
     },
