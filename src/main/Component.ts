@@ -6,29 +6,29 @@ import { LifecycleEventMap } from "./types/LifecycleEvent";
  * 
  * @template P The prefix used for event names. Default: `"component"`.
  * @template TEventMap The type of the event map. Default: {@link LifecycleEventMap}.
- * @template O The type of the options object. Default: {@link ComponentOptions}.
+ * @template TOptions The type of the options object. Default: {@link ComponentOptions}.
  */
 
 export abstract class Component<P extends string = "component",
     TEventMap extends LifecycleEventMap<P> = LifecycleEventMap<P>,
-    O extends ComponentOptions = ComponentOptions> {
+    TOptions extends ComponentOptions = ComponentOptions> {
     protected abstract readonly PREFIX:P;
     private _state: LifecycleState = LifecycleState.Idle;
-    protected readonly options: O;
+    protected readonly options: TOptions;
 
     /**
      * Constructor for Component.
      *
      * @param {HTMLElement} element - The DOM element this component is attached to.
-     * @param {Partial<O>} [options] - Optional configuration object.
+     * @param {Partial<TOptions>} [options] - Optional configuration object.
      */
     constructor(
     public readonly element: HTMLElement,
-    options?: Partial<O>,
+    options?: Partial<TOptions>,
     ) {
         const defaultOptions = (this.constructor as typeof Component).getDefaultOptions();
 
-        this.options = { ...defaultOptions, ...options } as O;
+        this.options = { ...defaultOptions, ...options } as TOptions;
     }
 
     /**
@@ -42,8 +42,11 @@ export abstract class Component<P extends string = "component",
      * 
      * @example
      * ```typescript
-     * type CustomOptions = { bubbleEvents: boolean; customOption: string };
-     * export  class CustomOptionsComponent extends Component<"custom-options", CustomOptions> {
+     * type CustomOptions = ExtendableComponentOptions<{ customOption: string }>;
+     * export  class CustomOptionsComponent extends Component<
+     *     "custom-options",
+     *     LifecycleEventMap<"custom-options">,
+     *     CustomOptions> {
      *     protected readonly PREFIX = "custom-options";
      *     
      *     protected static getDefaultOptions(): CustomOptions {
