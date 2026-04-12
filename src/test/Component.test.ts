@@ -4,7 +4,7 @@ import { Component } from "../main/Component";
 import { LifecycleState } from "../main/enums/LifecycleState";
 import { ExtendableComponentOptions } from "../main/types/ComponentOptions";
 import { ExtendableEventMap, LifecycleEventMap } from "../main/types/LifecycleEvent";
-import { CustomEventsComponent, CustomOptionsComponent, DefaultComponent, DummyComponent } from "./helpers/DummyComponent";
+import { CustomEventsComponent, CustomOptionsComponent, DefaultComponent, DummyComponent, TransitionErroredComponent, TransitionFailedComponent } from "./helpers/DummyComponent";
 
 describe("Component lifecycle", () => {
     let element: HTMLElement;
@@ -28,87 +28,127 @@ describe("Component lifecycle", () => {
             expect(component.isIdle()).toBe(true);
         });
 
-        it("valid transitions update state", () => {
-            component.init();
+        it("valid transitions update state", async () => {
+            await component.init();
             expect(component.state).toBe(LifecycleState.Initialized);
 
-            component.attach();
+            await component.attach();
             expect(component.state).toBe(LifecycleState.Attached);
 
-            component.dispose();
+            await component.dispose();
             expect(component.state).toBe(LifecycleState.Disposed);
 
-            component.attach();
+            await component.attach();
             expect(component.state).toBe(LifecycleState.Attached);
 
-            component.destroy();
+            await component.destroy();
             expect(component.state).toBe(LifecycleState.Destroyed);
         });
 
-        it("invalid transitions do NOT change state", () => {
-            component.attach(); // invalid from Idle
+        it("invalid transitions do NOT change state", async () => {
+            await component.attach(); // invalid from Idle
             expect(component.state).toBe(LifecycleState.Idle);
 
-            component.dispose(); // invalid from Idle
+            await component.dispose(); // invalid from Idle
             expect(component.state).toBe(LifecycleState.Idle);
 
-            component.destroy(); // invalid from Idle
+            await component.destroy(); // invalid from Idle
             expect(component.state).toBe(LifecycleState.Idle);
+        });
+
+        it("cancelled transitions do NOT change state", async () => {
+            const fallingComponent = new TransitionFailedComponent(element);
+
+            (fallingComponent as any)._state = LifecycleState.Idle;
+            await fallingComponent.init();
+            expect(fallingComponent.state).toBe(LifecycleState.Idle);
+
+            (fallingComponent as any)._state = LifecycleState.Initialized;
+            await fallingComponent.attach();
+            expect(fallingComponent.state).toBe(LifecycleState.Initialized);
+
+            (fallingComponent as any)._state = LifecycleState.Attached;
+            await fallingComponent.dispose();
+            expect(fallingComponent.state).toBe(LifecycleState.Attached);
+
+            (fallingComponent as any)._state = LifecycleState.Disposed;
+            await fallingComponent.destroy();
+            expect(fallingComponent.state).toBe(LifecycleState.Disposed);
+        });
+
+        it("errored transitions do NOT change state and rethrow error", async () => {
+            const erroredComponent = new TransitionErroredComponent(element);
+
+            (erroredComponent as any)._state = LifecycleState.Idle;
+            expect(erroredComponent.init()).rejects.toThrow("Transition Error");
+            expect(erroredComponent.state).toBe(LifecycleState.Idle);
+
+            (erroredComponent as any)._state = LifecycleState.Initialized;
+            expect(erroredComponent.attach()).rejects.toThrow("Transition Error");
+            expect(erroredComponent.state).toBe(LifecycleState.Initialized);
+
+            (erroredComponent as any)._state = LifecycleState.Attached;
+            expect(erroredComponent.dispose()).rejects.toThrow("Transition Error");
+            expect(erroredComponent.state).toBe(LifecycleState.Attached);
+
+            (erroredComponent as any)._state = LifecycleState.Disposed;
+            expect(erroredComponent.destroy()).rejects.toThrow("Transition Error");
+            expect(erroredComponent.state).toBe(LifecycleState.Disposed);
         });
     });
 
     describe("State check methods", () => {
-        it("isIdle() returns true only in Idle state", () => {
+        it("isIdle() returns true only in Idle state", async () => {
             expect(component.isIdle()).toBe(true);
-            component.init();
+            await component.init();
             expect(component.isIdle()).toBe(false);
         });
 
-        it("isInitialized() returns true only in Initialized state", () => {
+        it("isInitialized() returns true only in Initialized state", async () => {
             expect(component.isInitialized()).toBe(false);
-            component.init();
+            await component.init();
             expect(component.isInitialized()).toBe(true);
-            component.attach();
+            await component.attach();
             expect(component.isInitialized()).toBe(false);
         });
 
-        it("isAttached() returns true only in Attached state", () => {
+        it("isAttached() returns true only in Attached state", async () => {
             expect(component.isAttached()).toBe(false);
-            component.init();
+            await component.init();
             expect(component.isAttached()).toBe(false);
-            component.attach();
+            await component.attach();
             expect(component.isAttached()).toBe(true);
         });
 
-        it("isDisposed() returns true only in Disposed state", () => {
+        it("isDisposed() returns true only in Disposed state", async () => {
             expect(component.isDisposed()).toBe(false);
-            component.init();
+            await component.init();
             expect(component.isDisposed()).toBe(false);
-            component.attach();
+            await component.attach();
             expect(component.isDisposed()).toBe(false);
-            component.dispose();
+            await component.dispose();
             expect(component.isDisposed()).toBe(true);
         });
 
-        it("isDestroyed() returns true only in Destroyed state", () => {
+        it("isDestroyed() returns true only in Destroyed state", async () => {
             expect(component.isDestroyed()).toBe(false);
-            component.init();
+            await component.init();
             expect(component.isDestroyed()).toBe(false);
-            component.attach();
+            await component.attach();
             expect(component.isDestroyed()).toBe(false);
-            component.destroy();
+            await component.destroy();
             expect(component.isDestroyed()).toBe(true);
         });
     });
    
 
     describe("Hooks", () => {
-        it("hooks are called in correct order", () => {
-            component.init();
-            component.attach();
-            component.dispose();
-            component.attach();
-            component.destroy();
+        it("hooks are called in correct order", async () => {
+            await component.init();
+            await component.attach();
+            await component.dispose();
+            await component.attach();
+            await component.destroy();
 
             expect(component.calls).toEqual([
                 "init",
@@ -119,17 +159,17 @@ describe("Component lifecycle", () => {
             ]);
         });
 
-        it("delegate to abstract implementation when not overridden", () => {
+        it("delegate to abstract implementation when not overridden", async () => {
             const defaultComponent = new DefaultComponent(element);
             const doInitSpy = jest.spyOn(Component.prototype as any, "doInit");
             const doAttachSpy = jest.spyOn(Component.prototype as any, "doAttach");
             const doDisposeSpy = jest.spyOn(Component.prototype as any, "doDispose");
             const doDestroySpy = jest.spyOn(Component.prototype as any, "doDestroy");
 
-            defaultComponent.init();
-            defaultComponent.attach();
-            defaultComponent.dispose();
-            defaultComponent.destroy();
+            await defaultComponent.init();
+            await defaultComponent.attach();
+            await defaultComponent.dispose();
+            await defaultComponent.destroy();
             
             expect(doInitSpy).toHaveBeenCalledTimes(1);
             expect(doAttachSpy).toHaveBeenCalledTimes(1);
@@ -159,26 +199,26 @@ describe("Component lifecycle", () => {
                 element.removeEventListener("dummy:initialized", elementHandler);
             });
 
-            it("events bubble to document by default", () => {
-                component.init();
+            it("events bubble to document by default", async () => {
+                await component.init();
                 
                 expect(documentHandler).toHaveBeenCalledTimes(1);
                 expect(elementHandler).toHaveBeenCalledTimes(1);
             });
 
-            it("events do NOT bubble when bubbleEvents: false", () => {
+            it("events do NOT bubble when bubbleEvents: false", async () => {
                 const nonBubblingComponent = new DummyComponent(element, { bubbleEvents: false });
                 
-                nonBubblingComponent.init();
+                await nonBubblingComponent.init();
 
                 expect(documentHandler).not.toHaveBeenCalled();
                 expect(elementHandler).toHaveBeenCalledTimes(1);
             });
 
-            it("events bubble when bubbleEvents: true explicitly set", () => {
+            it("events bubble when bubbleEvents: true explicitly set", async () => {
                 const explicitBubblingComponent = new DummyComponent(element, { bubbleEvents: true });
                 
-                explicitBubblingComponent.init();
+                await explicitBubblingComponent.init();
                 
                 expect(documentHandler).toHaveBeenCalledTimes(1);
                 expect(elementHandler).toHaveBeenCalledTimes(1);
@@ -235,85 +275,85 @@ describe("Component lifecycle", () => {
         });
 
         describe("emit()", () => {
-            it("emits initialized event", () => {
+            it("emits initialized event", async () => {
                 const handler = jest.fn();
                 element.addEventListener("dummy:initialized", handler);
                 
-                component.init();
+                await component.init();
                 
                 expect(handler).toHaveBeenCalledTimes(1);
                 expect(handler.mock.calls[0][0].detail.component).toBe(component);
             });
             
-            it("emits attached event", () => {
+            it("emits attached event", async () => {
                 const handler = jest.fn();
                 element.addEventListener("dummy:attached", handler);
 
-                component.init();
-                component.attach();
+                await component.init();
+                await component.attach();
                 
                 expect(handler).toHaveBeenCalledTimes(1);
             });
 
-            it("emits disposed event", () => {
+            it("emits disposed event", async () => {
                 const handler = jest.fn();
                 element.addEventListener("dummy:disposed", handler);
                 
-                component.init();
-                component.attach();
-                component.dispose();
+                await component.init();
+                await component.attach();
+                await component.dispose();
                 
                 expect(handler).toHaveBeenCalledTimes(1);
             });
             
-            it("emits destroyed event", () => {
+            it("emits destroyed event", async () => {
                 const handler = jest.fn();
                 element.addEventListener("dummy:destroyed", handler);
                 
-                component.init();
-                component.attach();
-                component.destroy();
+                await component.init();
+                await component.attach();
+                await component.destroy();
                 
                 expect(handler).toHaveBeenCalledTimes(1);
             });
         });
 
         describe(".on()", () => {        
-            it("on() registers event listener", () => {
+            it("on() registers event listener", async () => {
                 const handler = jest.fn();
                 component.on("dummy:attached", handler);
         
-                component.init();
-                component.attach();
-                component.dispose();
-                component.attach();
+                await component.init();
+                await component.attach();
+                await component.dispose();
+                await component.attach();
         
                 expect(handler).toHaveBeenCalledTimes(2);
             });
         });
 
         describe(".once()", () => {    
-            it("once() registers a one-time listener", () => {
+            it("once() registers a one-time listener", async () => {
                 const handler = jest.fn();
                 component.once("dummy:attached", handler);
 
-                component.init();
-                component.attach();
-                component.dispose();
-                component.attach();
+                await component.init();
+                await component.attach();
+                await component.dispose();
+                await component.attach();
 
                 expect(handler).toHaveBeenCalledTimes(1);
             });
         });
 
         describe(".off()", () => {
-            it("off() removes listener", () => {
+            it("off() removes listener", async () => {
                 const handler = jest.fn();
                 component.on("dummy:attached", handler);
                 component.off("dummy:attached", handler);
                 
-                component.init();
-                component.attach();
+                await component.init();
+                await component.attach();
                 
                 expect(handler).not.toHaveBeenCalled();
             });
