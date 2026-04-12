@@ -5,10 +5,13 @@ import { LifecycleEventMap } from "./types/LifecycleEvent";
  * Abstract class representing a component in a web application.
  * 
  * @template P The prefix used for event names. Default: `"component"`.
+ * @template TEventMap The type of the event map. Default: {@link LifecycleEventMap}.
  * @template O The type of the options object. Default: {@link ComponentOptions}.
  */
 
-export abstract class Component<P extends string = "component", O extends ComponentOptions = ComponentOptions> {
+export abstract class Component<P extends string = "component",
+    TEventMap extends LifecycleEventMap<P> = LifecycleEventMap<P>,
+    O extends ComponentOptions = ComponentOptions> {
     protected abstract readonly PREFIX:P;
     private _state: LifecycleState = LifecycleState.Idle;
     protected readonly options: O;
@@ -264,9 +267,9 @@ export abstract class Component<P extends string = "component", O extends Compon
      * - The event name will be prefixed with the component's prefix.
      * - Events bubble to the document by default (bubbles: true) unless the component was instantiated with `bubbleEvents: false`.
      */
-    protected emit<K extends keyof LifecycleEventMap<P>>(
-        name: K,
-        detail: LifecycleEventMap<P>[K],
+    protected emit<K extends keyof TEventMap>(
+        name: K & string,
+        detail: TEventMap[K],
     ) {
         const eventName = `${this.PREFIX}:${name}`;
         const event: Event = new CustomEvent(eventName, {
@@ -285,9 +288,9 @@ export abstract class Component<P extends string = "component", O extends Compon
      *
      * @returns This component instance.
      */
-    on<K extends keyof LifecycleEventMap<P>>(
+    on<K extends keyof TEventMap>(
         name: `${P}:${K & string}`,
-        handler: (ev: CustomEvent<LifecycleEventMap<P>[K]>) => void,
+        handler: (ev: CustomEvent<TEventMap[K]>) => void,
     ) {
         this.element.addEventListener(name, handler as EventListener);
         return this;
@@ -302,9 +305,9 @@ export abstract class Component<P extends string = "component", O extends Compon
      *
      * @returns This component instance.
      */
-    once<K extends keyof LifecycleEventMap<P>>(
+    once<K extends keyof TEventMap>(
         name: `${P}:${K & string}`,
-        handler: (ev: CustomEvent<LifecycleEventMap<P>[K]>) => void,
+        handler: (ev: CustomEvent<TEventMap[K]>) => void,
     ) {
         this.element.addEventListener(name, handler as EventListener, {
             once: true,
@@ -321,9 +324,9 @@ export abstract class Component<P extends string = "component", O extends Compon
      *
      * @returns This component instance.
      */
-    off<K extends keyof LifecycleEventMap<P>>(
+    off<K extends keyof TEventMap>(
         name: `${P}:${K & string}`,
-        handler: (ev: CustomEvent<LifecycleEventMap<P>[K]>) => void,
+        handler: (ev: CustomEvent<TEventMap[K]>) => void,
     ) {
         this.element.removeEventListener(name, handler as EventListener);
         return this;
