@@ -2,7 +2,7 @@
 /// <reference types="jest" />
 import { Component } from "../main/Component";
 import { LifecycleState } from "../main/enums/LifecycleState";
-import { DefaultComponent, DummyComponent } from "./helpers/DummyComponent";
+import { CustomOptionsComponent, DefaultComponent, DummyComponent } from "./helpers/DummyComponent";
 
 describe("Component lifecycle", () => {
     let element: HTMLElement;
@@ -143,6 +143,46 @@ describe("Component lifecycle", () => {
     });
 
     describe("EVENTS", () => {
+        describe("Event bubbling", () => {
+            const documentHandler = jest.fn();
+            const elementHandler = jest.fn();
+
+            beforeEach(() => {
+                globalThis.document.addEventListener("dummy:initialized", documentHandler);
+                element.addEventListener("dummy:initialized", elementHandler);
+            });
+
+            afterEach(() => {
+                globalThis.document.removeEventListener("dummy:initialized", documentHandler);
+                element.removeEventListener("dummy:initialized", elementHandler);
+            });
+
+            it("events bubble to document by default", () => {
+                component.init();
+                
+                expect(documentHandler).toHaveBeenCalledTimes(1);
+                expect(elementHandler).toHaveBeenCalledTimes(1);
+            });
+
+            it("events do NOT bubble when bubbleEvents: false", () => {
+                const nonBubblingComponent = new DummyComponent(element, { bubbleEvents: false });
+                
+                nonBubblingComponent.init();
+
+                expect(documentHandler).not.toHaveBeenCalled();
+                expect(elementHandler).toHaveBeenCalledTimes(1);
+            });
+
+            it("events bubble when bubbleEvents: true explicitly set", () => {
+                const explicitBubblingComponent = new DummyComponent(element, { bubbleEvents: true });
+                
+                explicitBubblingComponent.init();
+                
+                expect(documentHandler).toHaveBeenCalledTimes(1);
+                expect(elementHandler).toHaveBeenCalledTimes(1);
+            });
+        });
+
         it("emits initialized event", () => {
             const handler = jest.fn();
             element.addEventListener("dummy:initialized", handler);
@@ -224,6 +264,17 @@ describe("Component lifecycle", () => {
             component.attach();
             
             expect(handler).not.toHaveBeenCalled();
+        });
+    });
+
+    describe("Extensibility", () => {
+        it("subclasses can override defaultOptions", () => {
+            const customComponent = new CustomOptionsComponent(element);
+            
+            const options = (customComponent as any).options;
+
+            expect(options.bubbleEvents).toBe(true); // inherited default
+            expect(options.customOption).toBe("custom value"); // custom extension
         });
     });
 });

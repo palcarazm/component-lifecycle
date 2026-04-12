@@ -1,20 +1,60 @@
 import { LifecycleState } from "./enums/LifecycleState";
+import { ComponentOptions } from "./types/ComponentOptions";
 import { LifecycleEventMap } from "./types/LifecycleEvent";
+/**
+ * Abstract class representing a component in a web application.
+ * 
+ * @template P The prefix used for event names. Default: `"component"`.
+ * @template O The type of the options object. Default: {@link ComponentOptions}.
+ */
 
-export abstract class Component<P extends string = "component"> {
+export abstract class Component<P extends string = "component", O extends ComponentOptions = ComponentOptions> {
     protected abstract readonly PREFIX:P;
     private _state: LifecycleState = LifecycleState.Idle;
+    protected readonly options: O;
 
     /**
      * Constructor for Component.
      *
      * @param {HTMLElement} element - The DOM element this component is attached to.
-     * @param {object} [options] - Optional configuration object.
+     * @param {Partial<O>} [options] - Optional configuration object.
      */
     constructor(
     public readonly element: HTMLElement,
-    protected readonly options?: { bubbleEvents?: boolean },
-    ) {}
+    options?: Partial<O>,
+    ) {
+        const defaultOptions = (this.constructor as typeof Component).getDefaultOptions();
+
+        this.options = { ...defaultOptions, ...options } as O;
+    }
+
+    /**
+     * Returns the default options for this component class.
+     * 
+     * @returns The default options configuration
+     * 
+     * @remarks
+     * Subclasses should override this method if they add custom options.
+     * Always call `super.getDefaultOptions()` and spread the result.
+     * 
+     * @example
+     * ```typescript
+     * type CustomOptions = { bubbleEvents: boolean; customOption: string };
+     * export  class CustomOptionsComponent extends Component<"custom-options", CustomOptions> {
+     *     protected readonly PREFIX = "custom-options";
+     *     
+     *     protected static getDefaultOptions(): CustomOptions {
+     *         return {
+     *             ...super.getDefaultOptions(),
+     *             customOption: "custom value"
+     *         };
+     *     }
+     * }
+     * ```
+     */
+    protected static getDefaultOptions(): ComponentOptions {
+        return DEFAULT_OPTIONS;
+    }
 
     /**
      * Returns the current lifecycle state of this component.
@@ -221,7 +261,8 @@ export abstract class Component<P extends string = "component"> {
      * @param detail The detail of the event to be emitted.
      *
      * @remarks
-     * The event name will be prefixed with the component's prefix.
+     * - The event name will be prefixed with the component's prefix.
+     * - Events bubble to the document by default (bubbles: true) unless the component was instantiated with `bubbleEvents: false`.
      */
     protected emit<K extends keyof LifecycleEventMap<P>>(
         name: K,
@@ -230,6 +271,7 @@ export abstract class Component<P extends string = "component"> {
         const eventName = `${this.PREFIX}:${name}`;
         const event: Event = new CustomEvent(eventName, {
             detail,
+            bubbles: this.options.bubbleEvents,
         });
         this.element.dispatchEvent(event);
     }
@@ -287,6 +329,14 @@ export abstract class Component<P extends string = "component"> {
         return this;
     }
 }
+
+/**
+ * Default options for the {@link Component} class according to {@link ComponentOptions}.
+ * @internal Not part of public API. Use `Component.getDefaultOptions()` for extensibility.
+ */
+const DEFAULT_OPTIONS: ComponentOptions = {
+    bubbleEvents: true,
+};
 
 /**
  * Valid transitions for each lifecycle state.
