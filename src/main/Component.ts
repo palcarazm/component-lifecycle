@@ -134,40 +134,49 @@ export abstract class Component<P extends string = "component",
      * Transitions the component to the given lifecycle state.
      *
      * If the transition is invalid, the component remains in its current lifecycle state.
+     * Awaits the corresponding lifecycle hook before completing the transition.
+     * If the hook returns `{ cancelled: true }`, the transition is abandoned.
      *
      * @param {LifecycleState} next The lifecycle state to transition to.
-     *
+     * @returns {Promise<void>} A promise that resolves when the transition is complete.
      * @remarks Fires:
      * - `initialized` If the component transitions to the initialized lifecycle state.
      * - `attached` If the component transitions to the attached lifecycle state.
      * - `disposed` If the component transitions to the disposed lifecycle state.
      * - `destroyed` If the component transitions to the destroyed lifecycle state.
      */
-    protected transitionTo(next: LifecycleState) {
+    protected async transitionTo(next: LifecycleState): Promise<void> {
         if (!this.canTransition(next)) return;
 
-        this._state = next;
-
         switch (next) {
-        case LifecycleState.Initialized:
-            this.doInit();
+        case LifecycleState.Initialized:{
+            const hookResult = await this.doInit();
+            if (hookResult.cancelled) return;
+            this._state = next;
             this.emit("initialized", { component: this });
-            break;
-
-        case LifecycleState.Attached:
-            this.doAttach();
+            return;
+        }
+        case LifecycleState.Attached:{
+            const hookResult = await this.doAttach();
+            if (hookResult.cancelled) return;
+            this._state = next;
             this.emit("attached", { component: this });
-            break;
-
-        case LifecycleState.Disposed:
-            this.doDispose();
+            return;
+        }
+        case LifecycleState.Disposed:{
+            const hookResult = await this.doDispose();
+            if (hookResult.cancelled) return;
+            this._state = next;
             this.emit("disposed", { component: this });
-            break;
-
-        case LifecycleState.Destroyed:
-            this.doDestroy();
+            return;
+        }
+        case LifecycleState.Destroyed:{
+            const hookResult = await this.doDestroy();
+            if (hookResult.cancelled) return;
+            this._state = next;
             this.emit("destroyed", { component: this });
-            break;
+            return;
+        }
         }
     }
 
@@ -178,11 +187,11 @@ export abstract class Component<P extends string = "component",
      * Implementation notes:
      * - This method should not be overridden by subclasses. To perform additional initialization tasks, override the `doInit()` method.
      * - This method should be called when the component is ready to be initialized.
-     * 
+     * @returns {Promise<void>} A promise that resolves when the initialization is complete.
      * @remarks Fires `initialized` If the component transitions to the initialized lifecycle state.
      */
-    init() {
-        this.transitionTo(LifecycleState.Initialized);
+    async init(): Promise<void> {
+        await this.transitionTo(LifecycleState.Initialized);
     }
     
     /**
@@ -192,11 +201,11 @@ export abstract class Component<P extends string = "component",
      * Implementation notes:
      * - This method should not be overridden by subclasses. To perform additional attachment tasks, override the `doAttach()` method.
      * - This method should be called when the component is ready to be attached.
-     *
+     * @returns {Promise<void>} A promise that resolves when the attachment is complete.
      * @remarks Fires `attached` If the component transitions to the attached lifecycle state.
      */
-    attach() {
-        this.transitionTo(LifecycleState.Attached);
+    async attach(): Promise<void> {
+        await this.transitionTo(LifecycleState.Attached);
     }
     
     /**
@@ -204,13 +213,13 @@ export abstract class Component<P extends string = "component",
      *
      * Transitions the component to the disposed lifecycle state.
      * Implementation notes:
-     * - This method should not be overridden by subclasses. To perform additional disposal tasks, override the `deoDispose()` method.
+     * - This method should not be overridden by subclasses. To perform additional disposal tasks, override the `doDispose()` method.
      * - This method should be called when the component is ready to be disposed.
-     *
+     * @returns {Promise<void>} A promise that resolves when the disposal is complete.
      * @remarks Fires `disposed` If the component transitions to the disposed lifecycle state.
      */
-    dispose() {
-        this.transitionTo(LifecycleState.Disposed);
+    async dispose(): Promise<void> {
+        await this.transitionTo(LifecycleState.Disposed);
     }
     
     /**
@@ -220,11 +229,11 @@ export abstract class Component<P extends string = "component",
      * Implementation notes:
      * - This method should not be overridden by subclasses. To perform additional destruction tasks, override the `doDestroy()` method.
      * - This method should be called when the component is ready to be destroyed.
-     *
+     * @returns {Promise<void>} A promise that resolves when the destruction is complete.
      * @remarks Fires `destroyed` If the component transitions to the destroyed lifecycle state.
      */
-    destroy() {
-        this.transitionTo(LifecycleState.Destroyed);
+    async destroy(): Promise<void> {
+        await this.transitionTo(LifecycleState.Destroyed);
     }
 
     /**
@@ -232,32 +241,56 @@ export abstract class Component<P extends string = "component",
      * 
      * Implementation notes:
      * - Can be overridden by subclasses to perform additional initialization tasks.
+     * - If async operations are needed, return a promise that resolves when complete.
+     * - Return `{ cancelled: true, reason: "..." }` to prevent the transition.
+     * 
+     * @returns {Promise<{ cancelled: boolean; reason?: string }>} A promise that resolves to an object with `cancelled` flag and optional `reason`.
      */
-    protected doInit() {/* no-op, can be overridden by subclasses */}
+    protected async doInit(): Promise<{ cancelled: boolean; reason?: string }> {
+        return { cancelled: false };
+    }
 
     /**
      * Hooks that are called when the component transitions to the attached lifecycle state.
      * 
      * Implementation notes:
-     * - Can be overridden by subclasses to perform additional initialization tasks.
+     * - Can be overridden by subclasses to perform additional attachment tasks.
+     * - If async operations are needed, return a promise that resolves when complete.
+     * - Return `{ cancelled: true, reason: "..." }` to prevent the transition.
+     * 
+     * @returns {Promise<{ cancelled: boolean; reason?: string }>} A promise that resolves to an object with `cancelled` flag and optional `reason`.
      */
-    protected doAttach() {/* no-op, can be overridden by subclasses */}
+    protected async doAttach(): Promise<{ cancelled: boolean; reason?: string }> {
+        return { cancelled: false };
+    }
 
     /**
      * Hooks that are called when the component transitions to the disposed lifecycle state.
      * 
      * Implementation notes:
-     * - Can be overridden by subclasses to perform additional initialization tasks.
+     * - Can be overridden by subclasses to perform additional disposal tasks.
+     * - If async operations are needed, return a promise that resolves when complete.
+     * - Return `{ cancelled: true, reason: "..." }` to prevent the transition.
+     * 
+     * @returns {Promise<{ cancelled: boolean; reason?: string }>} A promise that resolves to an object with `cancelled` flag and optional `reason`.
      */
-    protected doDispose() {/* no-op, can be overridden by subclasses */}
+    protected async doDispose(): Promise<{ cancelled: boolean; reason?: string }> {
+        return { cancelled: false };
+    }
 
     /**
      * Hooks that are called when the component transitions to the destroyed lifecycle state.
      * 
      * Implementation notes:
-     * - Can be overridden by subclasses to perform additional initialization tasks.
+     * - Can be overridden by subclasses to perform additional destruction tasks.
+     * - If async operations are needed, return a promise that resolves when complete.
+     * - Return `{ cancelled: true, reason: "..." }` to prevent the transition.
+     * 
+     * @returns {Promise<{ cancelled: boolean; reason?: string }>} A promise that resolves to an object with `cancelled` flag and optional `reason`.
      */
-    protected doDestroy() {/* no-op, can be overridden by subclasses */}
+    protected async doDestroy(): Promise<{ cancelled: boolean; reason?: string }> {
+        return { cancelled: false };
+    }
 
     /**
      * Emits a custom event with the given name and detail.
