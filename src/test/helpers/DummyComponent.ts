@@ -1,5 +1,6 @@
 // tests/helpers/DummyComponent.ts
 import { Component } from "../../main/Component";
+import { ExtendableEventMap, LifecycleEventMap } from "../../main/types/LifecycleEvent";
 
 export class DummyComponent extends Component<"dummy"> {
     protected readonly PREFIX = "dummy";
@@ -17,7 +18,10 @@ export class DefaultComponent extends Component {
 }
 
 type CustomOptions = { bubbleEvents: boolean; customOption: string };
-export  class CustomOptionsComponent extends Component<"custom-options", CustomOptions> {
+export  class CustomOptionsComponent extends Component<
+    "custom-options", 
+    LifecycleEventMap<"custom-options">, 
+    CustomOptions> {
     protected readonly PREFIX = "custom-options";
     
     protected static getDefaultOptions(): CustomOptions {
@@ -25,5 +29,21 @@ export  class CustomOptionsComponent extends Component<"custom-options", CustomO
             ...super.getDefaultOptions(),
             customOption: "custom value"
         };
+    }
+}
+
+ type CustomEvents = ExtendableEventMap<"custom-events", {
+      "loaded": { startedAt: Date, finishedAt: Date, data: string };
+      "loading": { startedAt: Date };
+    }>;
+export class CustomEventsComponent extends Component<"custom-events", CustomEvents> {
+    protected readonly PREFIX = "custom-events";
+
+    loadData() {
+        const startedAt = new Date();
+        this.emit("loading", { startedAt });
+        const data = "some data";
+        const finishedAt = new Date();
+        this.emit("loaded", { startedAt, finishedAt, data });
     }
 }

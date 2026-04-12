@@ -2,7 +2,8 @@
 /// <reference types="jest" />
 import { Component } from "../main/Component";
 import { LifecycleState } from "../main/enums/LifecycleState";
-import { CustomOptionsComponent, DefaultComponent, DummyComponent } from "./helpers/DummyComponent";
+import { ExtendableEventMap } from "../main/types/LifecycleEvent";
+import { CustomEventsComponent, CustomOptionsComponent, DefaultComponent, DummyComponent } from "./helpers/DummyComponent";
 
 describe("Component lifecycle", () => {
     let element: HTMLElement;
@@ -183,87 +184,138 @@ describe("Component lifecycle", () => {
             });
         });
 
-        it("emits initialized event", () => {
-            const handler = jest.fn();
-            element.addEventListener("dummy:initialized", handler);
-            
-            component.init();
-            
-            expect(handler).toHaveBeenCalledTimes(1);
-            expect(handler.mock.calls[0][0].detail.component).toBe(component);
+        describe("Custom events", () => {
+            it("should accept custom events via ExtendableEventMap helper", () => {
+                const component = new CustomEventsComponent(element);
+                const loadingHandler = jest.fn();
+                const loadedHandler = jest.fn();
+                
+                component
+                    .on("custom-events:loading", loadingHandler)
+                    .on("custom-events:loaded", loadedHandler);
+                
+                component.loadData();
+                
+                const expectedLoadingPayload = { detail: { startedAt: expect.any(Date) } };
+                expect(loadingHandler).toHaveBeenCalledWith(expect.objectContaining(expectedLoadingPayload));
+                
+                const expectedLoadedPayload = { detail: { startedAt: expect.any(Date), finishedAt: expect.any(Date), data: expect.any(String) } };
+                expect(loadedHandler).toHaveBeenCalledWith(expect.objectContaining(expectedLoadedPayload));
+            });
+
+            it("should type-check custom event payloads", () => {
+                type CustomEvents = ExtendableEventMap<"typed", {
+                    "data-event": { id: number; name: string };
+                }>;
+                
+                class TypedComponent extends Component<"typed", CustomEvents> {
+                    protected readonly PREFIX = "typed";
+                    
+                    wrongEmit() {
+                        // @ts-expect-error - wrong payload type
+                        this.emit("data-event", { id: "string" }); // Should error
+                    }
+                }
+                
+                const _component = new TypedComponent(element);
+            });
+
+            it("should reject overlapping event keys", () => {
+                type InvalidEvents = ExtendableEventMap<"test", {
+                    initialized: { foo: string };
+                }>;
+                
+                // @ts-expect-error TS2344 - Event key "initialized" conflicts with lifecycle event
+                class InvalidComponent extends Component<"test", InvalidEvents> {
+                    protected readonly PREFIX = "test";
+                }
+                const _component = new InvalidComponent(element);
+            });
         });
+
+        describe("emit()", () => {
+            it("emits initialized event", () => {
+                const handler = jest.fn();
+                element.addEventListener("dummy:initialized", handler);
+                
+                component.init();
+                
+                expect(handler).toHaveBeenCalledTimes(1);
+                expect(handler.mock.calls[0][0].detail.component).toBe(component);
+            });
+            
+            it("emits attached event", () => {
+                const handler = jest.fn();
+                element.addEventListener("dummy:attached", handler);
+
+                component.init();
+                component.attach();
+                
+                expect(handler).toHaveBeenCalledTimes(1);
+            });
+
+            it("emits disposed event", () => {
+                const handler = jest.fn();
+                element.addEventListener("dummy:disposed", handler);
+                
+                component.init();
+                component.attach();
+                component.dispose();
+                
+                expect(handler).toHaveBeenCalledTimes(1);
+            });
+            
+            it("emits destroyed event", () => {
+                const handler = jest.fn();
+                element.addEventListener("dummy:destroyed", handler);
+                
+                component.init();
+                component.attach();
+                component.destroy();
+                
+                expect(handler).toHaveBeenCalledTimes(1);
+            });
+        });
+
+        describe(".on()", () => {        
+            it("on() registers event listener", () => {
+                const handler = jest.fn();
+                component.on("dummy:attached", handler);
         
-        it("emits attached event", () => {
-            const handler = jest.fn();
-            element.addEventListener("dummy:attached", handler);
-
-            component.init();
-            component.attach();
-            
-            expect(handler).toHaveBeenCalledTimes(1);
-        });
-
-        it("emits disposed event", () => {
-            const handler = jest.fn();
-            element.addEventListener("dummy:disposed", handler);
-            
-            component.init();
-            component.attach();
-            component.dispose();
-            
-            expect(handler).toHaveBeenCalledTimes(1);
-        });
+                component.init();
+                component.attach();
+                component.dispose();
+                component.attach();
         
-        it("emits destroyed event", () => {
-            const handler = jest.fn();
-            element.addEventListener("dummy:destroyed", handler);
-            
-            component.init();
-            component.attach();
-            component.destroy();
-            
-            expect(handler).toHaveBeenCalledTimes(1);
+                expect(handler).toHaveBeenCalledTimes(2);
+            });
         });
-    });
 
-    describe(".on()", () => {        
-        it("on() registers event listener", () => {
-            const handler = jest.fn();
-            component.on("dummy:attached", handler);
-    
-            component.init();
-            component.attach();
-            component.dispose();
-            component.attach();
-    
-            expect(handler).toHaveBeenCalledTimes(2);
+        describe(".once()", () => {    
+            it("once() registers a one-time listener", () => {
+                const handler = jest.fn();
+                component.once("dummy:attached", handler);
+
+                component.init();
+                component.attach();
+                component.dispose();
+                component.attach();
+
+                expect(handler).toHaveBeenCalledTimes(1);
+            });
         });
-    });
 
-    describe(".once()", () => {    
-        it("once() registers a one-time listener", () => {
-            const handler = jest.fn();
-            component.once("dummy:attached", handler);
-
-            component.init();
-            component.attach();
-            component.dispose();
-            component.attach();
-
-            expect(handler).toHaveBeenCalledTimes(1);
-        });
-    });
-
-    describe(".off()", () => {
-        it("off() removes listener", () => {
-            const handler = jest.fn();
-            component.on("dummy:attached", handler);
-            component.off("dummy:attached", handler);
-            
-            component.init();
-            component.attach();
-            
-            expect(handler).not.toHaveBeenCalled();
+        describe(".off()", () => {
+            it("off() removes listener", () => {
+                const handler = jest.fn();
+                component.on("dummy:attached", handler);
+                component.off("dummy:attached", handler);
+                
+                component.init();
+                component.attach();
+                
+                expect(handler).not.toHaveBeenCalled();
+            });
         });
     });
 
