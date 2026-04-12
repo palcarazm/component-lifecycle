@@ -26,7 +26,7 @@ export default defineConfig({
     socialLinks: [
       { icon: "github", link: "https://github.com/palcarazm/component-lifecycle" }
     ],
-    outline: [2, 6],
+    outline: [2, 3],
 
     nav: [
       { text: "Home", link: "/" },
@@ -61,6 +61,7 @@ export default defineConfig({
             { text: "Classes", items: [{text: "Component", link: "/api/classes/Component.md"}] },
             { text: "Enumerations", items: [{text: "LifecycleState", link: "/api/enumerations/LifecycleState.md"}] },
             { text: "Type Aliases", items: [
+                {text: "ComponentOptions", link: "/api/type-aliases/ComponentOptions.md"},
                 {text: "LifecycleEventDetails", link: "/api/type-aliases/LifecycleEventDetails.md"},
                 {text: "LifecycleEventMap", link: "/api/type-aliases/LifecycleEventMap.md"},
               ]

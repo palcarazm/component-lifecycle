@@ -15,3 +15,15 @@ export class DummyComponent extends Component<"dummy"> {
 export class DefaultComponent extends Component {
     protected readonly PREFIX = "component";
 }
+
+type CustomOptions = { bubbleEvents: boolean; customOption: string };
+export  class CustomOptionsComponent extends Component<"custom-options", CustomOptions> {
+    protected readonly PREFIX = "custom-options";
+    
+    protected static getDefaultOptions(): CustomOptions {
+        return {
+            ...super.getDefaultOptions(),
+            customOption: "custom value"
+        };
+    }
+}
