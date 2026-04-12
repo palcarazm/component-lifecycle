@@ -62,6 +62,7 @@ export default defineConfig({
             { text: "Enumerations", items: [{text: "LifecycleState", link: "/api/enumerations/LifecycleState.md"}] },
             { text: "Type Aliases", items: [
                 {text: "ComponentOptions", link: "/api/type-aliases/ComponentOptions.md"},
+                {text: "ExtendableComponentOptions", link: "/api/type-aliases/ExtendableComponentOptions.md"},
                 {text: "ExtendableEventMap", link: "/api/type-aliases/ExtendableEventMap.md"},
                 {text: "LifecycleEventDetails", link: "/api/type-aliases/LifecycleEventDetails.md"},
                 {text: "LifecycleEventMap", link: "/api/type-aliases/LifecycleEventMap.md"},

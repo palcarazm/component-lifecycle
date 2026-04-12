@@ -2,7 +2,8 @@
 /// <reference types="jest" />
 import { Component } from "../main/Component";
 import { LifecycleState } from "../main/enums/LifecycleState";
-import { ExtendableEventMap } from "../main/types/LifecycleEvent";
+import { ExtendableComponentOptions } from "../main/types/ComponentOptions";
+import { ExtendableEventMap, LifecycleEventMap } from "../main/types/LifecycleEvent";
 import { CustomEventsComponent, CustomOptionsComponent, DefaultComponent, DummyComponent } from "./helpers/DummyComponent";
 
 describe("Component lifecycle", () => {
@@ -327,6 +328,18 @@ describe("Component lifecycle", () => {
 
             expect(options.bubbleEvents).toBe(true); // inherited default
             expect(options.customOption).toBe("custom value"); // custom extension
+        });
+
+        it("should reject overlapping options keys", () => {
+            type InvalidOptions = ExtendableComponentOptions<{
+                bubbleEvents: { foo: string };
+            }>;
+            
+            // @ts-expect-error TS2344 - Options key "bubbleEvents" conflicts with component's base option.
+            class InvalidComponent extends Component<"test",LifecycleEventMap<"test">, InvalidOptions> {
+                protected readonly PREFIX = "test";
+            }
+            const _component = new InvalidComponent(element);
         });
     });
 });

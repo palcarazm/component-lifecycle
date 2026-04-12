@@ -1,5 +1,6 @@
 // tests/helpers/DummyComponent.ts
 import { Component } from "../../main/Component";
+import { ExtendableComponentOptions } from "../../main/types/ComponentOptions";
 import { ExtendableEventMap, LifecycleEventMap } from "../../main/types/LifecycleEvent";
 
 export class DummyComponent extends Component<"dummy"> {
@@ -17,7 +18,7 @@ export class DefaultComponent extends Component {
     protected readonly PREFIX = "component";
 }
 
-type CustomOptions = { bubbleEvents: boolean; customOption: string };
+type CustomOptions = ExtendableComponentOptions<{ customOption: string }>;
 export  class CustomOptionsComponent extends Component<
     "custom-options", 
     LifecycleEventMap<"custom-options">, 

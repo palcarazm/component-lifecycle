@@ -57,7 +57,7 @@ export type ExtendableEventMap<
 * type Invalid = NoLifecycleKeys<{ initialized: {} }, "mycomp">;
 * // Results in: { initialized: "❌ Event key \"initialized\" conflicts with lifecycle event. Use a different name." }
  */
-export type NoLifecycleKeys<TCustom, P extends string> =
+type NoLifecycleKeys<TCustom, P extends string> =
   keyof TCustom & keyof LifecycleEventMap<P> extends never
     ? TCustom
     : {
