@@ -1,17 +1,79 @@
 // tests/helpers/DummyComponent.ts
 import { Component } from "../../main/Component";
+import { ExtendableComponentOptions } from "../../main/types/ComponentOptions";
+import { ExtendableEventMap, BaseEventMap } from "../../main/types/LifecycleEvent";
 
 export class DummyComponent extends Component<"dummy"> {
     protected readonly PREFIX = "dummy";
 
     public calls: string[] = [];
 
-    protected doInit() { this.calls.push("init"); }
-    protected doAttach() { this.calls.push("attach"); }
-    protected doDispose() { this.calls.push("dispose"); }
-    protected doDestroy() { this.calls.push("destroy"); }
+    protected async doInit() { this.calls.push("init"); return { cancelled: false }; }
+    protected async doAttach() { this.calls.push("attach"); return { cancelled: false }; }
+    protected async doDispose() { this.calls.push("dispose"); return { cancelled: false }; }
+    protected async doDestroy() { this.calls.push("destroy"); return { cancelled: false }; }
+}
+
+export class TransitionFailedComponent extends Component<"dummy"> {
+    protected readonly PREFIX = "dummy";
+
+    constructor(element: HTMLElement, protected readonly reason?: string) { super(element); }
+
+    public calls: string[] = [];
+
+    private getResponse() { return this.reason ? { cancelled: true, reason: this.reason } : { cancelled: true }; }
+
+    protected async doInit() { this.calls.push("init"); return this.getResponse(); }
+    protected async doAttach() { this.calls.push("attach"); return this.getResponse(); }
+    protected async doDispose() { this.calls.push("dispose"); return this.getResponse(); }
+    protected async doDestroy() { this.calls.push("destroy"); return this.getResponse(); }
+}
+
+export class TransitionErroredComponent extends Component<"dummy"> {
+    protected readonly PREFIX = "dummy";
+
+    public calls: string[] = [];
+    // @ts-expect-error 2416 - Transition Error for testing
+    protected async doInit() { this.calls.push("init"); throw new Error("Transition Error"); }
+    // @ts-expect-error 2416 - Transition Error for testing
+    protected async doAttach() { this.calls.push("attach"); throw new Error("Transition Error"); }
+    // @ts-expect-error 2416 - Transition Error for testing
+    protected async doDispose() { this.calls.push("dispose"); throw new Error("Transition Error"); }
+    // @ts-expect-error 2416 - Transition Error for testing
+    protected async doDestroy() { this.calls.push("destroy"); throw new Error("Transition Error"); }
 }
 
 export class DefaultComponent extends Component {
     protected readonly PREFIX = "component";
+}
+
+type CustomOptions = ExtendableComponentOptions<{ customOption: string }>;
+export  class CustomOptionsComponent extends Component<
+    "custom-options", 
+    BaseEventMap<"custom-options">, 
+    CustomOptions> {
+    protected readonly PREFIX = "custom-options";
+    
+    protected static getDefaultOptions(): CustomOptions {
+        return {
+            ...super.getDefaultOptions(),
+            customOption: "custom value"
+        };
+    }
+}
+
+ type CustomEvents = ExtendableEventMap<"custom-events", {
+      "loaded": { startedAt: Date, finishedAt: Date, data: string };
+      "loading": { startedAt: Date };
+    }>;
+export class CustomEventsComponent extends Component<"custom-events", CustomEvents> {
+    protected readonly PREFIX = "custom-events";
+
+    loadData() {
+        const startedAt = new Date();
+        this.emit("loading", { startedAt });
+        const data = "some data";
+        const finishedAt = new Date();
+        this.emit("loaded", { startedAt, finishedAt, data });
+    }
 }

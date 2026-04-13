@@ -1,6 +1,6 @@
 {
   "name": "component-lifecycle",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "type": "module",
   "description": "A lightweight, framework-agnostic lifecycle engine for DOM components with typed events, state machine, introspection and extensible hooks.",
   "homepage": "https://github.com/palcarazm/component-lifecycle#readme",

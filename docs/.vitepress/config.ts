@@ -26,7 +26,7 @@ export default defineConfig({
     socialLinks: [
       { icon: "github", link: "https://github.com/palcarazm/component-lifecycle" }
     ],
-    outline: [2, 6],
+    outline: [2, 3],
 
     nav: [
       { text: "Home", link: "/" },
@@ -46,6 +46,7 @@ export default defineConfig({
             { text: "Architecture", link: "/architecture" },
             { text: "Lifecycle", link: "/lifecycle" },
             { text: "Events", link: "/events" },
+            { text: "Monitoring", link: "/monitoring" },
             { text: "Examples", link: "/examples" },
             { text: "FAQ", link: "/faq" },
           ]
@@ -58,11 +59,25 @@ export default defineConfig({
           collapsed: false,
           items: [
             { text: "Overview", link: "/api/README.md" },
-            { text: "Classes", items: [{text: "Component", link: "/api/classes/Component.md"}] },
-            { text: "Enumerations", items: [{text: "LifecycleState", link: "/api/enumerations/LifecycleState.md"}] },
+            { text: "Classes", items: [
+                {text: "Component", link: "/api/classes/Component.md"},
+                {text: "Monitor", link: "/api/classes/Monitor.md"},
+              ]
+            },
+            { text: "Enumerations", items: [
+                {text: "LifecycleState", link: "/api/enumerations/LifecycleState.md"},
+                {text: "LogLevels", link: "/api/enumerations/LogLevels.md"},
+              ]
+            },
             { text: "Type Aliases", items: [
+                {text: "BaseEventMap", link: "/api/type-aliases/BaseEventMap.md"},
+                {text: "ComponentOptions", link: "/api/type-aliases/ComponentOptions.md"},
+                {text: "ExtendableComponentOptions", link: "/api/type-aliases/ExtendableComponentOptions.md"},
+                {text: "ExtendableEventMap", link: "/api/type-aliases/ExtendableEventMap.md"},
                 {text: "LifecycleEventDetails", link: "/api/type-aliases/LifecycleEventDetails.md"},
                 {text: "LifecycleEventMap", link: "/api/type-aliases/LifecycleEventMap.md"},
+                {text: "TransitionEventDetails", link: "/api/type-aliases/TransitionEventDetails.md"},
+                {text: "TransitionEventMap", link: "/api/type-aliases/TransitionEventMap.md"},
               ]
             },
           ]
