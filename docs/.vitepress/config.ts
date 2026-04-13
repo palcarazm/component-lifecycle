@@ -46,6 +46,7 @@ export default defineConfig({
             { text: "Architecture", link: "/architecture" },
             { text: "Lifecycle", link: "/lifecycle" },
             { text: "Events", link: "/events" },
+            { text: "Monitoring", link: "/monitoring" },
             { text: "Examples", link: "/examples" },
             { text: "FAQ", link: "/faq" },
           ]
@@ -58,8 +59,16 @@ export default defineConfig({
           collapsed: false,
           items: [
             { text: "Overview", link: "/api/README.md" },
-            { text: "Classes", items: [{text: "Component", link: "/api/classes/Component.md"}] },
-            { text: "Enumerations", items: [{text: "LifecycleState", link: "/api/enumerations/LifecycleState.md"}] },
+            { text: "Classes", items: [
+                {text: "Component", link: "/api/classes/Component.md"},
+                {text: "Monitor", link: "/api/classes/Monitor.md"},
+              ]
+            },
+            { text: "Enumerations", items: [
+                {text: "LifecycleState", link: "/api/enumerations/LifecycleState.md"},
+                {text: "LogLevels", link: "/api/enumerations/LogLevels.md"},
+              ]
+            },
             { text: "Type Aliases", items: [
                 {text: "BaseEventMap", link: "/api/type-aliases/BaseEventMap.md"},
                 {text: "ComponentOptions", link: "/api/type-aliases/ComponentOptions.md"},
