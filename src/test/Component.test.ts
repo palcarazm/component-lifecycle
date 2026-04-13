@@ -139,6 +139,31 @@ describe("Component lifecycle", () => {
             await component.destroy();
             expect(component.isDestroyed()).toBe(true);
         });
+
+        it("is(state) returns true only when component is in that state", async () => {
+            expect(component.is(LifecycleState.Idle)).toBe(true);
+            expect(component.is(LifecycleState.Initialized)).toBe(false);
+            
+            await component.init();
+            expect(component.is(LifecycleState.Idle)).toBe(false);
+            expect(component.is(LifecycleState.Initialized)).toBe(true);
+            
+            await component.attach();
+            expect(component.is(LifecycleState.Initialized)).toBe(false);
+            expect(component.is(LifecycleState.Attached)).toBe(true);
+            
+            await component.dispose();
+            expect(component.is(LifecycleState.Attached)).toBe(false);
+            expect(component.is(LifecycleState.Disposed)).toBe(true);
+            
+            await component.attach();
+            expect(component.is(LifecycleState.Disposed)).toBe(false);
+            expect(component.is(LifecycleState.Attached)).toBe(true);
+            
+            await component.destroy();
+            expect(component.is(LifecycleState.Attached)).toBe(false);
+            expect(component.is(LifecycleState.Destroyed)).toBe(true);
+        });
     });
    
 

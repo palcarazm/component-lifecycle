@@ -154,6 +154,20 @@ See **[Events](events.md)** for the full event list.
 - Call `init()`, `attach()`, or `dispose()` after `destroy()`.
 - Expect any further events or hooks to run.
 
+## Verifying the current state
+
+You can inspect the component’s current lifecycle state through the `myComponent.state` property. For convenience, the component also provides a type‑safe state checker: `myComponent.is(<state>)` returns a boolean indicating whether the component is currently in the specified lifecycle state.
+
+In addition to the generic `is()` method, several shorthand helpers are available:
+
+- `isIdle()`
+- `isInitialized()`
+- `isAttached()`
+- `isDisposed()`
+- `isDestroyed()`
+
+These shortcuts improve readability and make common state checks more explicit.
+
 ## Lifecycle hooks overview
 
 Each lifecycle method may trigger a corresponding hook:
