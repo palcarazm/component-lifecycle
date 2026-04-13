@@ -1,7 +1,7 @@
 // tests/helpers/DummyComponent.ts
 import { Component } from "../../main/Component";
 import { ExtendableComponentOptions } from "../../main/types/ComponentOptions";
-import { ExtendableEventMap, LifecycleEventMap } from "../../main/types/LifecycleEvent";
+import { ExtendableEventMap, BaseEventMap } from "../../main/types/LifecycleEvent";
 
 export class DummyComponent extends Component<"dummy"> {
     protected readonly PREFIX = "dummy";
@@ -17,12 +17,16 @@ export class DummyComponent extends Component<"dummy"> {
 export class TransitionFailedComponent extends Component<"dummy"> {
     protected readonly PREFIX = "dummy";
 
+    constructor(element: HTMLElement, protected readonly reason?: string) { super(element); }
+
     public calls: string[] = [];
 
-    protected async doInit() { this.calls.push("init"); return { cancelled: true }; }
-    protected async doAttach() { this.calls.push("attach"); return { cancelled: true }; }
-    protected async doDispose() { this.calls.push("dispose"); return { cancelled: true }; }
-    protected async doDestroy() { this.calls.push("destroy"); return { cancelled: true }; }
+    private getResponse() { return this.reason ? { cancelled: true, reason: this.reason } : { cancelled: true }; }
+
+    protected async doInit() { this.calls.push("init"); return this.getResponse(); }
+    protected async doAttach() { this.calls.push("attach"); return this.getResponse(); }
+    protected async doDispose() { this.calls.push("dispose"); return this.getResponse(); }
+    protected async doDestroy() { this.calls.push("destroy"); return this.getResponse(); }
 }
 
 export class TransitionErroredComponent extends Component<"dummy"> {
@@ -46,7 +50,7 @@ export class DefaultComponent extends Component {
 type CustomOptions = ExtendableComponentOptions<{ customOption: string }>;
 export  class CustomOptionsComponent extends Component<
     "custom-options", 
-    LifecycleEventMap<"custom-options">, 
+    BaseEventMap<"custom-options">, 
     CustomOptions> {
     protected readonly PREFIX = "custom-options";
     

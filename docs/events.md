@@ -9,7 +9,7 @@ Every component defines a **static event prefix**, which determines the namespac
 protected static readonly PREFIX = "my-component"
 ```
 
-This prefix is combined with lifecycle event names to generate fully typed event identifiers:
+This prefix is combined with event names to generate fully typed event identifiers:
 
 - `my-component:initialized`
 - `my-component:attached`
@@ -19,7 +19,10 @@ This prefix is combined with lifecycle event names to generate fully typed event
 These event names are **not strings you manually maintain** — they are generated and validated at compile time using TypeScript template literal types.
 
 ## Event Model
+> [!NOTE]
+> You can extend this event model in your own components see [Custom Events](#custom-events).
 
+### Lifecycle Events
 Each lifecycle transition emits a corresponding event:
 
 | Lifecycle Transition      | Event Name                    | Emitted By |
@@ -27,18 +30,20 @@ Each lifecycle transition emits a corresponding event:
 | `idle → initialized`      | `prefix:initialized`          | `init()`   |
 | `initialized → attached`  | `prefix:attached`             | `attach()` |
 | `attached → disposed`     | `prefix:disposed`             | `dispose()`|
+| `attached → destroyed`    | `prefix:destroyed`            | `destroy()`|
 | `disposed → attached`     | `prefix:attached`             | `attach()` |
 | `disposed → destroyed`    | `prefix:destroyed`            | `destroy()`|
 
-All events include a **typed payload**, which contains:
+All events include a **typed payload** (see [LifecycleEventDetails](./api/type-aliases/LifecycleEventDetails.md)).
 
-```ts
-{
-  component: this
-}
-```
+### Unsuccessful Transition Events
+Each unsuccessful transition emits a corresponding event:
 
-You can extend this event model in your own components see [Custom Events](#custom-events).
+| Unsuccessful Transition | Event Name                    | Emitted when                                         |
+|-------------------------|-------------------------------|------------------------------------------------------|
+| `cancelled`             | `prefix:transition-cancelled` | Transition hook resolves with `{ cancelled: true }`  |
+
+All events include a **typed payload** (see [TransitionEventDetails](./api/type-aliases/TransitionEventDetails.md)).
 
 ## Listening to Events
 

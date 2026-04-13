@@ -3,7 +3,7 @@
 import { Component } from "../main/Component";
 import { LifecycleState } from "../main/enums/LifecycleState";
 import { ExtendableComponentOptions } from "../main/types/ComponentOptions";
-import { ExtendableEventMap, LifecycleEventMap } from "../main/types/LifecycleEvent";
+import { ExtendableEventMap, BaseEventMap } from "../main/types/LifecycleEvent";
 import { CustomEventsComponent, CustomOptionsComponent, DefaultComponent, DummyComponent, TransitionErroredComponent, TransitionFailedComponent } from "./helpers/DummyComponent";
 
 describe("Component lifecycle", () => {
@@ -318,6 +318,85 @@ describe("Component lifecycle", () => {
             });
         });
 
+        describe("transition-cancelled event", () => {
+            it("emits transition-cancelled when doInit returns cancelled", async () => {
+                const cancelledComponent = new TransitionFailedComponent(element);
+                const handler = jest.fn();
+                
+                element.addEventListener("dummy:transition-cancelled", handler);
+                await cancelledComponent.init();
+
+                const expectedEventDetail = { component: cancelledComponent, from: LifecycleState.Idle, to: LifecycleState.Initialized, reason: undefined };
+                expect(handler).toHaveBeenCalledTimes(1);
+                expect(handler).toHaveBeenCalledWith(expect.objectContaining({ detail : expectedEventDetail }));
+            });
+
+            it("emits transition-cancelled when doAttach returns cancelled", async () => {
+                const cancelledComponent = new TransitionFailedComponent(element);
+                (cancelledComponent as any)._state = LifecycleState.Initialized;
+                const handler = jest.fn();
+                
+                element.addEventListener("dummy:transition-cancelled", handler);
+                await cancelledComponent.attach();
+                
+                const expectedEventDetail = { component: cancelledComponent, from: LifecycleState.Initialized, to: LifecycleState.Attached, reason: undefined };
+                expect(handler).toHaveBeenCalledTimes(1);
+                expect(handler).toHaveBeenCalledWith(expect.objectContaining({ detail : expectedEventDetail }));
+            });
+
+            it("emits transition-cancelled when doDispose returns cancelled", async () => {
+                const cancelledComponent = new TransitionFailedComponent(element);
+                (cancelledComponent as any)._state = LifecycleState.Attached;
+                const handler = jest.fn();
+                
+                element.addEventListener("dummy:transition-cancelled", handler);
+                await cancelledComponent.dispose();
+                
+                const expectedEventDetail = { component: cancelledComponent, from: LifecycleState.Attached, to: LifecycleState.Disposed, reason: undefined };
+                expect(handler).toHaveBeenCalledTimes(1);
+                expect(handler).toHaveBeenCalledWith(expect.objectContaining({ detail : expectedEventDetail }));
+            });
+
+            it("emits transition-cancelled when doDestroy returns cancelled", async () => {
+                const cancelledComponent = new TransitionFailedComponent(element);
+                (cancelledComponent as any)._state = LifecycleState.Disposed;
+                const handler = jest.fn();
+                
+                element.addEventListener("dummy:transition-cancelled", handler);
+                await cancelledComponent.destroy();
+                
+                const expectedEventDetail = { component: cancelledComponent, from: LifecycleState.Disposed, to: LifecycleState.Destroyed, reason: undefined };
+                expect(handler).toHaveBeenCalledTimes(1);
+                expect(handler).toHaveBeenCalledWith(expect.objectContaining({ detail : expectedEventDetail }));
+            });
+
+            it("includes reason in transition-cancelled event when provided", async () => {
+                
+                const reasonComponent = new TransitionFailedComponent(element, "Data validation failed");
+                const handler = jest.fn();
+                
+                element.addEventListener("dummy:transition-cancelled", handler);
+                await reasonComponent.init();
+                
+                const expectedEventDetail = expect.objectContaining({ reason: "Data validation failed" });
+                expect(handler).toHaveBeenCalledTimes(1);
+                expect(handler).toHaveBeenCalledWith(expect.objectContaining({ detail : expectedEventDetail }));
+            });
+
+            it("should not emit transition-cancelled when transition is successful", async () => {
+                const handler = jest.fn();
+                element.addEventListener("dummy:transition-cancelled", handler);
+
+                await component.init();
+                await component.attach();
+                await component.dispose();
+                await component.attach();
+                await component.destroy();
+                
+                expect(handler).not.toHaveBeenCalled();
+            });
+        });
+
         describe(".on()", () => {        
             it("on() registers event listener", async () => {
                 const handler = jest.fn();
@@ -376,7 +455,7 @@ describe("Component lifecycle", () => {
             }>;
             
             // @ts-expect-error TS2344 - Options key "bubbleEvents" conflicts with component's base option.
-            class InvalidComponent extends Component<"test",LifecycleEventMap<"test">, InvalidOptions> {
+            class InvalidComponent extends Component<"test",BaseEventMap<"test">, InvalidOptions> {
                 protected readonly PREFIX = "test";
             }
             const _component = new InvalidComponent(element);
