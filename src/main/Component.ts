@@ -145,9 +145,17 @@ export abstract class Component<P extends string = "component",
      * - `disposed` If the component transitions to the disposed lifecycle state.
      * - `destroyed` If the component transitions to the destroyed lifecycle state.
      * - `transition-cancelled` If the transition is cancelled by a lifecycle hook.
+     * - `transition-invalid` If the transition is structurally invalid (invalid lifecycle state graph).
      */
     protected async transitionTo(next: LifecycleState): Promise<void> {
-        if (!this.canTransition(next)) return;
+        if (!this.canTransition(next)) {
+            this.emit("transition-invalid", {
+                component: this,
+                from: this._state,
+                to: next
+            });
+            return;
+        }
 
         switch (next) {
         case LifecycleState.Initialized:
@@ -207,7 +215,10 @@ export abstract class Component<P extends string = "component",
      * - This method should not be overridden by subclasses. To perform additional initialization tasks, override the `doInit()` method.
      * - This method should be called when the component is ready to be initialized.
      * @returns {Promise<void>} A promise that resolves when the initialization is complete.
-     * @remarks Fires `initialized` If the component transitions to the initialized lifecycle state.
+     * @remarks Fires:
+     * - `initialized` If the component transitions to the initialized lifecycle state.
+     * - `transition-cancelled` If the transition is cancelled by a lifecycle hook.
+     * - `transition-invalid` If the transition is structurally invalid (invalid lifecycle state graph).
      */
     async init(): Promise<void> {
         await this.transitionTo(LifecycleState.Initialized);
@@ -221,7 +232,10 @@ export abstract class Component<P extends string = "component",
      * - This method should not be overridden by subclasses. To perform additional attachment tasks, override the `doAttach()` method.
      * - This method should be called when the component is ready to be attached.
      * @returns {Promise<void>} A promise that resolves when the attachment is complete.
-     * @remarks Fires `attached` If the component transitions to the attached lifecycle state.
+     * @remarks Fires:
+     * - `attached` If the component transitions to the attached lifecycle state.
+     * - `transition-cancelled` If the transition is cancelled by a lifecycle hook.
+     * - `transition-invalid` If the transition is structurally invalid (invalid lifecycle state graph).
      */
     async attach(): Promise<void> {
         await this.transitionTo(LifecycleState.Attached);
@@ -235,7 +249,10 @@ export abstract class Component<P extends string = "component",
      * - This method should not be overridden by subclasses. To perform additional disposal tasks, override the `doDispose()` method.
      * - This method should be called when the component is ready to be disposed.
      * @returns {Promise<void>} A promise that resolves when the disposal is complete.
-     * @remarks Fires `disposed` If the component transitions to the disposed lifecycle state.
+     * @remarks Fires:
+     * - `disposed` If the component transitions to the disposed lifecycle state.
+     * - `transition-cancelled` If the transition is cancelled by a lifecycle hook.
+     * - `transition-invalid` If the transition is structurally invalid (invalid lifecycle state graph).
      */
     async dispose(): Promise<void> {
         await this.transitionTo(LifecycleState.Disposed);
@@ -249,7 +266,10 @@ export abstract class Component<P extends string = "component",
      * - This method should not be overridden by subclasses. To perform additional destruction tasks, override the `doDestroy()` method.
      * - This method should be called when the component is ready to be destroyed.
      * @returns {Promise<void>} A promise that resolves when the destruction is complete.
-     * @remarks Fires `destroyed` If the component transitions to the destroyed lifecycle state.
+     * @remarks Fires:
+     * - `destroyed` If the component transitions to the destroyed lifecycle state.
+     * - `transition-cancelled` If the transition is cancelled by a lifecycle hook.
+     * - `transition-invalid` If the transition is structurally invalid (invalid lifecycle state graph).
      */
     async destroy(): Promise<void> {
         await this.transitionTo(LifecycleState.Destroyed);

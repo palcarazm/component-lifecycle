@@ -319,11 +319,15 @@ describe("Component lifecycle", () => {
         });
 
         describe("transition-cancelled event", () => {
-            it("emits transition-cancelled when doInit returns cancelled", async () => {
-                const cancelledComponent = new TransitionFailedComponent(element);
-                const handler = jest.fn();
-                
+            const handler = jest.fn();
+            let cancelledComponent: Component<"dummy">;
+
+            beforeEach(() => {
+                cancelledComponent = new TransitionFailedComponent(element);
                 element.addEventListener("dummy:transition-cancelled", handler);
+            });
+
+            it("emits transition-cancelled when doInit returns cancelled", async () => {
                 await cancelledComponent.init();
 
                 const expectedEventDetail = { component: cancelledComponent, from: LifecycleState.Idle, to: LifecycleState.Initialized, reason: undefined };
@@ -332,11 +336,7 @@ describe("Component lifecycle", () => {
             });
 
             it("emits transition-cancelled when doAttach returns cancelled", async () => {
-                const cancelledComponent = new TransitionFailedComponent(element);
                 (cancelledComponent as any)._state = LifecycleState.Initialized;
-                const handler = jest.fn();
-                
-                element.addEventListener("dummy:transition-cancelled", handler);
                 await cancelledComponent.attach();
                 
                 const expectedEventDetail = { component: cancelledComponent, from: LifecycleState.Initialized, to: LifecycleState.Attached, reason: undefined };
@@ -345,11 +345,7 @@ describe("Component lifecycle", () => {
             });
 
             it("emits transition-cancelled when doDispose returns cancelled", async () => {
-                const cancelledComponent = new TransitionFailedComponent(element);
                 (cancelledComponent as any)._state = LifecycleState.Attached;
-                const handler = jest.fn();
-                
-                element.addEventListener("dummy:transition-cancelled", handler);
                 await cancelledComponent.dispose();
                 
                 const expectedEventDetail = { component: cancelledComponent, from: LifecycleState.Attached, to: LifecycleState.Disposed, reason: undefined };
@@ -358,11 +354,7 @@ describe("Component lifecycle", () => {
             });
 
             it("emits transition-cancelled when doDestroy returns cancelled", async () => {
-                const cancelledComponent = new TransitionFailedComponent(element);
                 (cancelledComponent as any)._state = LifecycleState.Disposed;
-                const handler = jest.fn();
-                
-                element.addEventListener("dummy:transition-cancelled", handler);
                 await cancelledComponent.destroy();
                 
                 const expectedEventDetail = { component: cancelledComponent, from: LifecycleState.Disposed, to: LifecycleState.Destroyed, reason: undefined };
@@ -371,11 +363,7 @@ describe("Component lifecycle", () => {
             });
 
             it("includes reason in transition-cancelled event when provided", async () => {
-                
                 const reasonComponent = new TransitionFailedComponent(element, "Data validation failed");
-                const handler = jest.fn();
-                
-                element.addEventListener("dummy:transition-cancelled", handler);
                 await reasonComponent.init();
                 
                 const expectedEventDetail = expect.objectContaining({ reason: "Data validation failed" });
@@ -384,9 +372,69 @@ describe("Component lifecycle", () => {
             });
 
             it("should not emit transition-cancelled when transition is successful", async () => {
-                const handler = jest.fn();
-                element.addEventListener("dummy:transition-cancelled", handler);
+                await component.init();
+                await component.attach();
+                await component.dispose();
+                await component.attach();
+                await component.destroy();
+                
+                expect(handler).not.toHaveBeenCalled();
+            });
+        });
 
+        describe("transition-invalid event", () => {
+            const handler = jest.fn();
+
+            beforeEach(() => {
+                element.addEventListener("dummy:transition-invalid", handler);
+            });
+
+            it("emits transition-invalid when transitioning from Idle to Attached (skip Initialized)", async () => {
+                await component.attach();
+
+                const expectedEventDetail = { component, from: LifecycleState.Idle, to: LifecycleState.Attached, reason: undefined };
+                expect(handler).toHaveBeenCalledTimes(1);
+                expect(handler).toHaveBeenCalledWith(expect.objectContaining({ detail: expectedEventDetail }));
+            });
+
+            it("emits transition-invalid when transitioning from Idle to Disposed", async () => {               
+                await component.dispose();
+
+                const expectedEventDetail = { component, from: LifecycleState.Idle, to: LifecycleState.Disposed, reason: undefined };
+                expect(handler).toHaveBeenCalledTimes(1);
+                expect(handler).toHaveBeenCalledWith(expect.objectContaining({ detail: expectedEventDetail }));
+            });
+
+            it("emits transition-invalid when transitioning from Idle to Destroyed", async () => {               
+                await component.destroy();
+
+                const expectedEventDetail = { component, from: LifecycleState.Idle, to: LifecycleState.Destroyed, reason: undefined };
+                expect(handler).toHaveBeenCalledTimes(1);
+                expect(handler).toHaveBeenCalledWith(expect.objectContaining({ detail: expectedEventDetail }));
+            });
+
+            it("emits transition-invalid when trying to attach twice", async () => {
+                await component.init();
+                await component.attach();
+                await component.attach();
+
+                const expectedEventDetail = { component, from: LifecycleState.Attached, to: LifecycleState.Attached, reason: undefined };
+                expect(handler).toHaveBeenCalledTimes(1);
+                expect(handler).toHaveBeenCalledWith(expect.objectContaining({ detail: expectedEventDetail }));
+            });
+
+            it("emits transition-invalid when trying to transition from Destroyed", async () => {                
+                await component.init();
+                await component.attach();
+                await component.destroy();
+                await component.attach();
+
+                const expectedEventDetail = { component, from: LifecycleState.Destroyed, to: LifecycleState.Attached, reason: undefined };
+                expect(handler).toHaveBeenCalledTimes(1);
+                expect(handler).toHaveBeenCalledWith(expect.objectContaining({ detail: expectedEventDetail }));
+            });
+
+            it("should not emit transition-invalid for valid transitions", async () => {
                 await component.init();
                 await component.attach();
                 await component.dispose();

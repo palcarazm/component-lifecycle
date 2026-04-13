@@ -42,6 +42,7 @@ export type TransitionEventDetails<P extends string> = LifecycleEventDetails<P> 
  */
 export type TransitionEventMap<P extends string> = {
   "transition-cancelled": TransitionEventDetails<P>;
+  "transition-invalid": TransitionEventDetails<P>;
 };
 
 /**

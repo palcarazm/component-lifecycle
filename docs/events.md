@@ -39,9 +39,10 @@ All events include a **typed payload** (see [LifecycleEventDetails](./api/type-a
 ### Unsuccessful Transition Events
 Each unsuccessful transition emits a corresponding event:
 
-| Unsuccessful Transition | Event Name                    | Emitted when                                         |
-|-------------------------|-------------------------------|------------------------------------------------------|
-| `cancelled`             | `prefix:transition-cancelled` | Transition hook resolves with `{ cancelled: true }`  |
+| Unsuccessful Transition | Event Name                    | Emitted when                                                        |
+|-------------------------|-------------------------------|---------------------------------------------------------------------|
+| `cancelled`             | `prefix:transition-cancelled` | Transition hook resolves with `{ cancelled: true }`.                |
+| `invalid`               | `prefix:transition-invalid`   | Trying to transit to a not reachable state in the transition graph. |
 
 All events include a **typed payload** (see [TransitionEventDetails](./api/type-aliases/TransitionEventDetails.md)).
 
