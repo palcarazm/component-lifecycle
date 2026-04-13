@@ -108,7 +108,7 @@ See **[Events](events.md)** for the full event list.
 
 **Don’t**
 
-- Allocate resources that you never release in `onDispose()` or `onDestroy()`.
+- Allocate resources that you never release in `doDispose()` or `doDestroy()`.
 - Assume the component will never be detached.
 
 ### `disposed`
@@ -172,10 +172,10 @@ These shortcuts improve readability and make common state checks more explicit.
 
 Each lifecycle method may trigger a corresponding hook:
 
-- `init()` → `onInit()`  
-- `attach(target)` → `onAttach(target)`  
-- `dispose()` → `onDispose()`  
-- `destroy()` → `onDestroy()`  
+- `init()` → `doInit()`  
+- `attach(target)` → `doAttach(target)`  
+- `dispose()` → `doDispose()`  
+- `destroy()` → `doDestroy()`  
 
 ### Example: implementing hooks correctly
 
@@ -183,18 +183,18 @@ Each lifecycle method may trigger a corresponding hook:
 class Toggle extends Component<"toggle"> {
   protected static readonly PREFIX = "toggle"
 
-  protected onInit(): void {
+  protected doInit(): void {
     // Good: internal setup, no DOM access
     this.state = { active: false }
   }
 
-  protected onAttach(target: Element): void {
+  protected doAttach(target: Element): void {
     // Good: DOM binding and listeners
     this.button = target as HTMLButtonElement
     this.button.addEventListener("click", this.handleClick)
   }
 
-  protected onDispose(): void {
+  protected doDispose(): void {
     // Good: clean up DOM listeners and references
     if (this.button) {
       this.button.removeEventListener("click", this.handleClick)
@@ -202,7 +202,7 @@ class Toggle extends Component<"toggle"> {
     }
   }
 
-  protected onDestroy(): void {
+  protected doDestroy(): void {
     // Good: final cleanup, release any remaining resources
     this.state = undefined
   }
@@ -215,7 +215,7 @@ class Toggle extends Component<"toggle"> {
 
 **Good practices**
 
-- **`onInit`**: pure internal setup, no DOM.  
-- **`onAttach`**: DOM binding, listeners, side effects.  
-- **`onDispose`**: undo what `onAttach` did.  
-- **`onDestroy`**: final cleanup, nothing should remain referenced.
+- **`doInit`**: pure internal setup, no DOM.  
+- **`doAttach`**: DOM binding, listeners, side effects.  
+- **`doDispose`**: undo what `doAttach` did.  
+- **`doDestroy`**: final cleanup, nothing should remain referenced.
