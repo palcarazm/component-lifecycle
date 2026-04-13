@@ -1,16 +1,16 @@
 import { LifecycleState } from "./enums/LifecycleState";
 import { ComponentOptions } from "./types/ComponentOptions";
-import { LifecycleEventMap } from "./types/LifecycleEvent";
+import { BaseEventMap, LifecycleEventMap } from "./types/LifecycleEvent";
 /**
  * Abstract class representing a component in a web application.
  * 
  * @template P The prefix used for event names. Default: `"component"`.
- * @template TEventMap The type of the event map. Default: {@link LifecycleEventMap}.
+ * @template TEventMap The type of the event map. Default: {@link BaseEventMap}.
  * @template TOptions The type of the options object. Default: {@link ComponentOptions}.
  */
 
 export abstract class Component<P extends string = "component",
-    TEventMap extends LifecycleEventMap<P> = LifecycleEventMap<P>,
+    TEventMap extends BaseEventMap<P> = BaseEventMap<P>,
     TOptions extends ComponentOptions = ComponentOptions> {
     protected abstract readonly PREFIX:P;
     private _state: LifecycleState = LifecycleState.Idle;
@@ -144,40 +144,59 @@ export abstract class Component<P extends string = "component",
      * - `attached` If the component transitions to the attached lifecycle state.
      * - `disposed` If the component transitions to the disposed lifecycle state.
      * - `destroyed` If the component transitions to the destroyed lifecycle state.
+     * - `transition-cancelled` If the transition is cancelled by a lifecycle hook.
      */
     protected async transitionTo(next: LifecycleState): Promise<void> {
         if (!this.canTransition(next)) return;
 
         switch (next) {
-        case LifecycleState.Initialized:{
-            const hookResult = await this.doInit();
-            if (hookResult.cancelled) return;
-            this._state = next;
-            this.emit("initialized", { component: this });
+        case LifecycleState.Initialized:
+            await this.executeTransition(next, () => this.doInit(), "initialized");
+            return;
+        case LifecycleState.Attached:
+            await this.executeTransition(next, () => this.doAttach(), "attached");
+            return;
+        case LifecycleState.Disposed:
+            await this.executeTransition(next, () => this.doDispose(), "disposed");
+            return;
+        case LifecycleState.Destroyed:
+            await this.executeTransition(next, () => this.doDestroy(), "destroyed");
             return;
         }
-        case LifecycleState.Attached:{
-            const hookResult = await this.doAttach();
-            if (hookResult.cancelled) return;
-            this._state = next;
-            this.emit("attached", { component: this });
+    }
+
+    /**
+     * Executes a lifecycle state transition, running the associated hook and
+     * emitting the corresponding lifecycle event if the transition succeeds.
+     *
+     * @internal Internal helper: it is **not** a generic event emitter wrapper.
+     *   It is only used for lifecycle-driven transitions.
+     * @template K extends keyof LifecycleEventMap<P>
+     *   The lifecycle event name to emit after a successful transition.
+     * @param toState The target lifecycle state to move into.
+     * @param hook The lifecycle hook to execute before committing the transition.
+     *   If the hook returns `{ cancelled: true }`, the transition is aborted
+     *   and a `"transition-cancelled"` event is emitted instead.
+     * @param eventName The lifecycle event to emit when the transition completes successfully.
+     * @returns A promise that resolves once the transition have completed.
+     */
+    private async executeTransition<K extends keyof LifecycleEventMap<P>>(
+        toState: LifecycleState,
+        hook: () => Promise<{ cancelled: boolean; reason?: string }>,
+        eventName: K & string
+    ): Promise<void> {
+        const hookResult = await hook();
+        if (hookResult.cancelled) {
+            this.emit("transition-cancelled", {
+                component: this,
+                from: this._state,
+                to: toState,
+                reason: hookResult.reason
+            });
             return;
         }
-        case LifecycleState.Disposed:{
-            const hookResult = await this.doDispose();
-            if (hookResult.cancelled) return;
-            this._state = next;
-            this.emit("disposed", { component: this });
-            return;
-        }
-        case LifecycleState.Destroyed:{
-            const hookResult = await this.doDestroy();
-            if (hookResult.cancelled) return;
-            this._state = next;
-            this.emit("destroyed", { component: this });
-            return;
-        }
-        }
+        this._state = toState;
+        this.emit(eventName, { component: this });
     }
 
     /**
