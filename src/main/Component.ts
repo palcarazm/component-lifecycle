@@ -77,7 +77,7 @@ export abstract class Component<P extends string = "component",
      * @returns {boolean} Whether this component is in the idle lifecycle state.
      */
     isIdle() {
-        return this._state === LifecycleState.Idle;
+        return this.is(LifecycleState.Idle);
     }
     
     /**
@@ -86,7 +86,7 @@ export abstract class Component<P extends string = "component",
      * @returns {boolean} Whether this component is in the initialized lifecycle state.
      */
     isInitialized() {
-        return this._state === LifecycleState.Initialized;
+        return this.is(LifecycleState.Initialized);
     }
     
     /**
@@ -95,7 +95,7 @@ export abstract class Component<P extends string = "component",
      * @returns {boolean} Whether this component is in the attached lifecycle state.
      */
     isAttached() {
-        return this._state === LifecycleState.Attached;
+        return this.is(LifecycleState.Attached);
     }
     
     /**
@@ -104,7 +104,7 @@ export abstract class Component<P extends string = "component",
      * @returns {boolean} Whether this component is in the disposed lifecycle state.
      */
     isDisposed() {
-        return this._state === LifecycleState.Disposed;
+        return this.is(LifecycleState.Disposed);
     }
     
     /**
@@ -113,7 +113,17 @@ export abstract class Component<P extends string = "component",
      * @returns {boolean} Whether this component is in the destroyed lifecycle state.
      */
     isDestroyed() {
-        return this._state === LifecycleState.Destroyed;
+        return this.is(LifecycleState.Destroyed);
+    }
+    
+    /**
+     * Checks if the component is in the given lifecycle state.
+     *
+     * @param {LifecycleState} state The lifecycle state to check against.
+     * @returns {boolean} Whether the component is in the given lifecycle state.
+     */
+    is(state: LifecycleState): boolean {
+        return this.state === state;
     }
 
     /**
