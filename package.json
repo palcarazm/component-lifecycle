@@ -57,13 +57,14 @@
     "build:ts": "tsc --project tsconfig.json",
     "build:rollup": "rollup -c",
     "build": "npm run clean && npm run build:ts && npm run build:rollup && npm run clean:tmp",
+    "prepack": "npm run build",
     "lint": "eslint ./src",
     "prepare": "husky",
     "test": "jest --coverage"
   },
   "engines": {
-    "node": ">=22 <25",
-    "npm": ">=10"
+    "node": "^22.0.0 || ^24.0.0 || ^26.0.0",
+    "npm": ">=10.9.9"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.1.0",
